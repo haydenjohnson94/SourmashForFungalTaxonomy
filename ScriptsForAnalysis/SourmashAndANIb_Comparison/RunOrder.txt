@@ -1,0 +1,56 @@
+Run order for SourmashAndANIb_Comparison/
+==========================================
+
+This pipeline compares sourmash ANI against PyANI's ANIb across pairs of taxa spanning
+a range of evolutionary distances ("evolutionary paths": same-species, same-genus,
+same-family, etc.). It shares one NCBI genome-catalog snapshot (step 1) across two
+independent branches - a species/genus accession survey, and the evolutionary-paths
+ANI comparison - that don't feed into each other.
+
+All scripts use placeholder paths (/path/to/your/...) and a placeholder SLURM
+partition (YOUR_PARTITION) - edit these before submitting.
+
+1. Download_NCBI_Genome_Summaries.sh
+   Pulls a live snapshot of NCBI's fungal and oomycete genome catalogs via the
+   `datasets summary genome taxon` command, saved as dated JSON files
+   (fungi_genome_summary_<date>.json, oomycete_genome_summary_<date>.json).
+
+   NOTE: the exact snapshot used for the manuscript
+   (fungi_genome_summary_Apr14_2025.json) is NOT reproducible by re-running this
+   script, since NCBI's catalog grows over time - it's archived on Zenodo instead
+   (see .gitignore / top-level README for the link). Download it into
+   SpeciesGenusAnalysis/ before running steps 2 or 3 below if you want to reproduce
+   the manuscript's exact accession set, rather than a fresh catalog snapshot.
+
+   From here the pipeline splits into two independent branches:
+
+--- Branch A: species/genus accession survey (terminal output, not used downstream) ---
+
+2. SpeciesGenusAnalysis/Run_DetermineAccessionsDataframe.sh
+   Runs DetermineAccessionsDataframe_SpeciesGenus.py, which reads
+   fungi_genome_summary_Apr14_2025.json and produces SpeciesGenus_names.csv.
+
+--- Branch B: evolutionary-paths ANI comparison ---
+
+2. DetermineEvolutionaryPaths.py
+   No sbatch wrapper - run directly (e.g. `python DetermineEvolutionaryPaths.py`)
+   or interactively. Reads fungi_genome_summary_Apr14_2025.json and
+   oomycete_genome_summary_Apr14_2025.json, uses ete3's NCBITaxa to walk the
+   taxonomy, and produces evolutionary_paths_names.csv,
+   evolutionary_paths_accessions.csv, and taxonomic_rank_relationships.csv.
+
+3. FurtherFilteringEvolutionaryPaths.ipynb
+   Reads the three CSVs from step 2, applies quality/redundancy filtering, and
+   produces filtered1_evolutionary_paths_accessions.csv (plus filtered1_/filtered2_
+   versions of the names and rank-relationship tables). The ANI computation scripts
+   below read filtered1_evolutionary_paths_accessions.csv specifically.
+
+4. ForANI_Computations/Run_ANI_Computations_Sourmash.sh
+   and
+   ForANI_Computations/Run_ANI_Computations_PyANI.sh
+   Run these ONE AT A TIME, never concurrently - both scripts download genomes into
+   and clean up the same shared GENOME_DIR (ForANI_Computations/OutputFiles/), so
+   running them in parallel will race and corrupt each other's inputs. Order between
+   the two doesn't matter, just don't overlap them. Each computes pairwise ANI
+   (sourmash or PyANI's ANIb, respectively) for every accession pair listed in
+   filtered1_evolutionary_paths_accessions.csv.

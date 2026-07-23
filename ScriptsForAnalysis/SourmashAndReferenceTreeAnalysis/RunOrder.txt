@@ -1,0 +1,48 @@
+Run order for SourmashAndReferenceTreeAnalysis/ (Cryptococcus/Tremella species complex)
+=========================================================================================
+
+This pipeline builds a BUSCO-based reference tree and a sourmash-based tree for the
+Cryptococcus/Tremella species complex, then compares them (Robinson-Foulds distance,
+tree-distance correlation), mirroring DetermineSourmashParameters_SpeciesGenusFamily/
+but at the species-complex scale.
+
+All scripts use placeholder paths (/path/to/your/...) and a placeholder SLURM
+partition (YOUR_PARTITION) - edit these before submitting.
+
+1. DownloadGenomes_Cryptococcus.sh
+   Downloads the genome assemblies for this analysis. The accession list is NOT
+   hardcoded - it's extracted directly from the published BUSCO reference tree
+   shipped in this repo
+   (SupplementalData_Accessions_Trees_And_BUSCOdatabases/.../Cryptococcus/Cryptococcus_BUSCO.tree),
+   so the accession set always stays in sync with the manuscript's data.
+
+2. RunBUSCO_Cryptococcus.sh
+   Runs BUSCO on every downloaded genome. Skips any genome that already has a
+   completed BUSCO summary, so it's safe to re-run.
+
+3. RunBUSCO_AutoDetectReruns_Cryptococcus.sh
+   Run after step 2. Scans for BUSCO runs that failed or were interrupted and
+   retries only those.
+
+4. Zip_BUSCO_Results_Cryptococcus.sh
+   REQUIRED before step 5 (unlike the Hypocreaceae pipeline, where the equivalent
+   zip step is just optional archival). Packages each genome's run_fungi_odb10/
+   directory into run_fungi_odb10_<ACCESSION>.tar.gz - BuildBUSCOTree_Cryptococcus_Reduced.ipynb
+   (step 5) expects results in this archived layout, not the raw busco_results/ directories.
+
+5. Run_Jupyter_BuildBUSCOTree_Cryptococcus.sh
+   Executes BuildBUSCOTree_Cryptococcus_Reduced.ipynb via nbconvert, which reads the
+   .tar.gz archives from step 4 and builds the BUSCO reference tree.
+
+6. Run_Jupyter_CryptococcusComplexesSourmashANI.sh
+   Executes CryptococcusComplexes_ComputeSourmashANI.ipynb, which sketches sourmash
+   signatures and computes pairwise ANI. No separate symlink step here (unlike
+   Hypocreaceae) - this notebook's ASSEMBLY_DIR points directly at the genomes
+   downloaded in step 1 (BUSCO_CryptococcusReduced/genomes/), reusing them as-is.
+
+7. CryptococcusComplexes_SourmashTreeCreation_And_RF_Distance_Computation.ipynb
+   NO sbatch wrapper exists for this notebook - run it directly (`jupyter nbconvert
+   --to notebook --execute ...` or interactively), not via sbatch. Needs BOTH the
+   BUSCO tree (step 5) and the sourmash ANI matrices (step 6). Builds a UPGMA tree
+   per k-mer size/ANI method and compares each one to the BUSCO tree via
+   Robinson-Foulds distance and tree-distance correlation.

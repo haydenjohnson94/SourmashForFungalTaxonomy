@@ -12,7 +12,7 @@
 # data (leaf labels look like "Organism Name (GCA_XXXXXXXXX.X)").
 
 DATASETS_TOOL="/path/to/your/datasets_tool/datasets"
-TREE_FILE="../../Accessions_Trees_And_BUSCOdatabases/CompareSourmashAndPhylogeneticAnalysis/Complexes/Cryptococcus/Cryptococcus_BUSCO.tree"
+TREE_FILE="../../SupplementalData_Accessions_Trees_And_BUSCOdatabases/CompareSourmashAndPhylogeneticAnalysis/Complexes/Cryptococcus/Cryptococcus_BUSCO.tree"
 OUTPUT_DIR="/path/to/your/analysis_directory/SpeciesComplex_SourmashTrees/CryptococcusComplexes_Reduced/BUSCO_CryptococcusReduced"
 DOWNLOAD_DIR="$OUTPUT_DIR/downloads"
 GENOME_DIR="$OUTPUT_DIR/genomes"

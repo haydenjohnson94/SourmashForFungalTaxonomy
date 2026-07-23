@@ -1,0 +1,45 @@
+Run order for DetermineSourmashParameters_SpeciesGenusFamily/Hypocreaceae/
+==========================================================================
+
+This pipeline builds a BUSCO-based reference tree and a sourmash-based tree for the
+same set of same-species Hypocreaceae genomes, then compares them (Robinson-Foulds
+distance, tree-distance correlation) to determine which sourmash parameters (k-mer
+size, ANI method) best recover the BUSCO topology.
+
+All scripts use placeholder paths (/path/to/your/...) and a placeholder SLURM
+partition (YOUR_PARTITION) - edit these before submitting.
+
+1. DownloadGenomes_SameSpecies.sh
+   Downloads the genome assemblies for the target accessions into genomes/.
+
+2. RunBUSCO_SameSpecies.sh
+   Runs BUSCO on every downloaded genome. Skips any genome that already has a
+   completed BUSCO summary, so it's safe to re-run.
+
+3. RunBUSCO_AutoDetectReruns.sh
+   Run after step 2. Scans for BUSCO runs that failed or were interrupted and
+   retries only those.
+
+4. SymlinkAssemblies.sh
+   Populates Assemblies_SameSpecies/ with symlinks back to the downloaded genomes
+   in BUSCO_Hypocreaceae/genomes/. The sourmash notebook in step 6 reads from this
+   symlinked directory (ASSEMBLY_DIR), not the original genomes/ directory.
+
+5. BUSCO_Hypocreaceae/Run_Jupyter_BuildAllBUSCOtrees.sh
+   Executes BuildBUSCOTree_SameSpecies.ipynb via nbconvert, which reads the raw
+   busco_results/ directories from steps 2-3 and builds the BUSCO reference tree.
+
+6. Sourmash_Hypocreaceae/Run_Jupyter_AllSourmashRuns.sh
+   Executes SameSpecies_Hypocreaceae_ComputeSourmashSigAndANI.ipynb, which sketches
+   sourmash signatures (at several k-mer sizes) for every assembly in
+   Assemblies_SameSpecies/ (step 4) and computes all pairwise ANI matrices.
+
+7. Sourmash_Hypocreaceae/Run_Jupyter_SourmashTreeAndRF.sh
+   Executes SameSpecies_Hypocreaceae_SourmashTreeComparisons_UPGMAtrees_And_RF_Computation.ipynb,
+   which needs BOTH the BUSCO tree (step 5) and the sourmash ANI matrices (step 6).
+   Builds a UPGMA tree per k-mer size/ANI method and compares each one to the BUSCO
+   tree via Robinson-Foulds distance and tree-distance correlation.
+
+8. BUSCO_Hypocreaceae/Zip_BUSCO_Results.sh
+   Optional, run any time after step 3. Compresses the (large) per-genome BUSCO
+   output directories for storage - not a dependency for any later step.
