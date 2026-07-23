@@ -1,0 +1,25 @@
+# Jupyter
+.ipynb_checkpoints/
+*_executed.ipynb
+*_executed1.ipynb
+
+# Python
+__pycache__/
+*.pyc
+
+# OS cruft
+.DS_Store
+
+# NCBI genome catalog snapshot (~60MB) used as input to DetermineAccessionsDataframe_SpeciesGenus.py
+# and DetermineEvolutionaryPaths.py. NOT reproducibly regeneratable: Download_NCBI_Genome_Summaries.sh
+# pulls live from NCBI's `datasets summary genome taxon` and the catalog grows over time, so a fresh
+# pull won't match the original April 2025 snapshot used in the analysis. Archived on Zenodo instead —
+# see README for the DOI/link. Download it into
+# ScriptsForAnalysis/SourmashAndANIb_Comparison/SpeciesGenusAnalysis/ before running the scripts below.
+ScriptsForAnalysis/SourmashAndANIb_Comparison/SpeciesGenusAnalysis/fungi_genome_summary_Apr14_2025.json
+
+# Derived from the Zenodo-archived fungi_genome_summary_Apr14_2025.json above via
+# ScriptsForAnalysis/SourmashAndANIb_Comparison/SpeciesGenusAnalysis/Run_DetermineAccessionsDataframe.sh
+# (DetermineAccessionsDataframe_SpeciesGenus.py hardcodes reading that exact json file, so it must be
+# in place first - this script alone can't regenerate this file from scratch).
+ScriptsForAnalysis/SourmashAndANIb_Comparison/SpeciesGenusAnalysis/SpeciesGenus_names.csv
